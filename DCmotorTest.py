@@ -1,3 +1,8 @@
+# this is a simple test code for use with 2 DC motors 
+# and a simple H bridge board such as the L298H
+# This code provides only direction but no speed control
+
+
 import RPi.GPIO as GPIO
 import time
 
