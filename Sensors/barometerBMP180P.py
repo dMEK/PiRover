@@ -11,4 +11,4 @@ altitude = bmp.readAltitude()
 
 print "Temperature: %.2f C" %temp
 print "Pressure: %.2f hPa" %(pressure/100.0)
-print "Altitude: %.2f" %taltitude
+print "Altitude: %.2f" %altitude
