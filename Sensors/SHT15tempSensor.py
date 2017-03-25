@@ -2,7 +2,7 @@
 # This library should be installed with the robot code directory
 # The library should be named rpiSht1x-1.2.tar.gz
 
-fromsht1x.Sht1x import Sht1x as SHT1x
+from sht1x.Sht1x import Sht1x as SHT1x
 
 dataPin = 11
 clkPin = 7
