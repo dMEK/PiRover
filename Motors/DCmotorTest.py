@@ -28,31 +28,31 @@ GPIO.setup(in4, GPIO.OUT)
 GPIO.setup(enA, GPIO.OUT)
 GPIO.setup(enB, GPIO.OUT)
 
-def rForward()
+def rForward():
   "motor forward"
   GPIO.output(en, 1)
   GPIO.output(in1, 0)
   GPIO.output(in2, 1)
   
-def lForward()
+def lForward():
   "motor forward"
   GPIO.output(en, 1)
   GPIO.output(in3, 0)
   GPIO.output(in4, 1)
   
-def rBackward()
+def rBackward():
   "motor backward"
   GPIO.output(en, 1)
   GPIO.output(in1, 1)
   GPIO.output(in2, 0)
 
-def lBackward()
+def lBackward():
   "motor backward"
   GPIO.output(en, 1)
   GPIO.output(in3, 1)
   GPIO.output(in4, 0)
 
-def allStop
+def allStop:
   GPIO.output(enA, 0)
   GPIO.output(enB, 0)
 
