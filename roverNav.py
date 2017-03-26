@@ -64,7 +64,7 @@ def lBackward():
   GPIO.output(in3, 1)
   GPIO.output(in4, 0)
 
-def allStop:
+def allStop():
   GPIO.output(enA, 0)
   GPIO.output(enB, 0)
 
@@ -101,4 +101,180 @@ class GpsPoller(threading.Thread):
       gpsd.next()
       
 # Compass setup
+bus = smbus.SMBus(0)
+compAddress = 0x1e
+pi = math.pi
 
+def read_byte(adr):
+  return bus.read_byte_data(compAddress, adr)
+
+def read_word(adr):
+  high = bus.read_byte_data(compAddress, adr)
+  low = bus.read_byte_data(compAddress, adr + 1)
+  val = (high << 8) + low
+  return val
+
+def read_word_2c(adr):
+  val = read_word(adr)
+  if val >= 0x8000:
+    return -((65535 - val) + 1)
+  else:
+    return val
+  
+def write_byte(adr, value):
+  bus.write_byte_data(compAddress, adr, value)
+  
+def getBearing():
+  #write 112, 32 and 0 to the device to config for reading
+  write_byte (0, 0b01110000)
+  write_byte (1, 0b00100000)
+  write_byte (1, 0b00000000)
+
+  # offset values need to be callibrated to postion on the planet
+  scale = 0.92
+  x_offset = -39
+  y_offset = -100
+
+  x_out = (read_word_2c(3) - x_offset) * scale
+  y_out = (read_word_2c(7) - y_offset) * scale
+
+  bearing = math.atan2(y_out, x_out)
+  if bearing < 0:
+    bearing += 2 * pi
+  return str(math.degrees(bearing))
+
+#Robot Arm Servo
+
+loR = 40
+hiR = 100
+smth = 0.5 #delay to smooth servo motion
+
+def raise_arm():
+  for i in range (loR, hiR):
+  call("echo 2=" + str(i) + " > /dev/servoblaster" , shell=True)
+  time.sleep(smth)
+  
+def lower_arm():
+  for i in reversed(range (loR, hiR)):
+  call("echo 2=" + str(i) + " > /dev/servoblaster" , shell=True)
+  time.sleep(smth)
+  
+#Rangefinder Setup
+
+trig = 15
+echo = 13
+
+GPIO.setup(trig, OUT)
+GPIO.setup(echo, IN)
+
+def getRange():
+  time.sleep(0.3)
+  GPIO.output(trig, True)
+  time.sleep(0.00001)
+  GPIO.output(trig, False)
+  
+  while GPIO.input(echo) == 0:
+    signaloff = time.time()
+    
+  while GPIO.input(echo) == 1:
+    signalon = time.time()
+    
+  timepassed = signalon - signaloff
+  distanceCM = timepassed * 17000 #converts signal delay into CM
+  return str(distanceCM)
+
+#Pressure and Temperature
+
+bmp = BMP085(0x77)
+
+def getTemp():
+  return str(bmp.readTemperature())
+
+def getPressure():
+  return str(bmp.readPressure()/1000)
+
+if __name__ = '__main__':
+  isGPS = False
+  gpsQuery = raw_input("Is GPS connected to this unit?").lower()
+  if gpsQuery in ('y', 'yes'):
+    isGPS = True
+    gpsp = GpsPoller()
+    gpsp.start()
+  try:
+    while True:
+      
+      # get command from user
+      
+      os.system("clear")
+      
+      print "Range to target: " + getRange()
+      print "Temp: " + getTemperature() + "C"
+      print "Pressure: " + getPressure() + "kPa"
+      if isGPS:
+        print "Location: " + str(gpsd.fix.longitude) + "," + str(gpsd.fix.latitude)
+      print "Bearing: " + getBearing() + "degrees"
+      print "W = Forward"
+      print "S = Backward"
+      print "A = Left"
+      print "D = Right"
+      print "Space = Stop"
+      print "O = Raise Arm"
+      print "K = Lower Arm"
+      print "P = Take Picture"
+      
+      command = raw_input("Enter Command (Q to Quit): ").lower()
+      
+      if command =="w":
+        forward()
+        time.sleep(0.5)
+        continue
+      elif command =="s":
+        reverse()
+        time.sleep(0.5)
+        continue
+      elif command =="a":
+        spinLeft()
+        time.sleep(0.5)
+        continue
+      elif command =="d":
+        spinRight()
+        time.sleep(0.5)
+        continue
+      elif command ==" ":
+        allStop()
+        time.sleep(0.5)
+        continue
+      elif command =="o":
+        raise_arm()
+        time.sleep(0.5)
+        continue
+      elif command =="k":
+        lower_arm()
+        time.sleep(0.5)
+        continue
+      elif command =="p":
+        subprocess.call("raspistill -o image.jpg, shell = True)
+        time.sleep(0.5)
+        continue
+                        
+      elif command =="q":
+        if isGPS:
+          gpsp.running = False
+          gpsp.join()
+        GPIO.cleanup()
+        break
+      
+      else:
+        print "Invalid Command"
+        time.sleep(0.5)
+        continue
+
+  except (KeyboardInterrupt, SystemExit):
+    if isGPS:
+      gpsp.running = False
+      gpsp.join()
+    GPIO.cleanup()
+      
+      
+
+ 
