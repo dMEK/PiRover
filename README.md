@@ -13,3 +13,11 @@ and servoBlaster by Richard Hirst
 
 A lot of the original code was very ugly with redundancies
 The code has been cleaned up somewhat, but is still untested as of 26/3/2017
+
+
+EDIT: having now worked through Wolfram Donat's book, it explains some of the basics fairly well, 
+but the desctiption of interfacing and functioning of the hardware is packing and in some cases innaccurate
+And the code is quite buggy, having found numerous errors in the code while working through it
+It is also decidedly ugly, not setting constants for pins, and repeating the entire control code block 
+In the final script - once with GPS and once without
+More detailed explenation of the use of Python Modules would also have helped in the clarity of this book
